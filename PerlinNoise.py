@@ -3,41 +3,37 @@ import pygame, math
 
 # Matricies Multiplication Functions
 
+# Test values
+ma = ((1,0,1),(1,0,1),(1,0,1))
+mb = ((0.1,1),(1,1),(1,1))
 
-
-ma = ((1,0,5),(1,0,5),(1,0,5))
-mb = ((1,1),(1,1),(1,1))
-
-
+# Multiply Matricies Function. Requires [][] even when there is a sole value in a list.
 def MatriciesMultiply(ma,mb):
-    rowa = len(ma)
-    cola = len(ma[0]) 
-    colb = len(mb[0])
+    rowa = len(ma[0])
+    cola = len(ma)
+    rowb = len(mb[0])
+    colb = len(mb)
 
-    if cola != len(mb):
+    if colb != rowa:
         print("Error, columns don't match rows")
         return ["NOT A FUNCTION"]
 
     mc = []
     
-    
-    
     i = 0
-    while i != rowa:
-       
+    while i != cola:
         l = 0
         mc.append([])
-        while l != colb:
+        while l != rowb:
             mc[i].append(1)
             l += 1
-        #mc.append([1,1])
-
 
         j = 0
-        while j != colb:
+        while j != rowb:
             amount = 0
             k = 0
-            while k != cola:
+            while k != rowa:
+
                 amount += ma[i][k] * mb[k][j]
                 print(amount)
                 k += 1
@@ -48,38 +44,31 @@ def MatriciesMultiply(ma,mb):
         
         i += 1
 
-
     return mc
 
-
+# Test the function
 mc = MatriciesMultiply(ma, mb)
 print(mc)
 
+# WIP angles. Typing error. Will check tommorrow.
+angle = 1
+rotationZ = [[math.cos(angle),-1 * math.sin(angle),0],
+             [math.sin(angle),math.cos(angle), 0]
+             [0,0,1]]
 
+rotationX = ((1,0,0),
+             (0,math.cos(angle),-1 * math.sin(angle),)
+             (0,math.sin(angle),math.sin(cos)))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+rotationY = ((math.cos(angle),0,math.sin(angle),(0,1,0),(-1 * math.sin(angle),0,math.cos(angle))))
 # end
 
+#Draw window.
 
 WINDOW = pygame.display.set_mode((800,800))
 
 
+# Set up the grid. Perspective and 3D is not yet added.
 x = 0
 y = 0
 scale = 20
@@ -105,6 +94,8 @@ while x < col:
 
     y = 0
 
+
+# Draw and update window loop
 def main():
 
     run = True
