@@ -1,5 +1,5 @@
 # Terrain-Generator
-A simple renderer using projection from 3D to 2D to display terrain generated through perlin noise. Work in Progress.
+A simple renderer in Python using projection from 3D to 2D to display terrain generated through perlin noise. Work in Progress.
 
 Resources used:
 The Coding Train - Matrix Multiplication for 3D Rendering
