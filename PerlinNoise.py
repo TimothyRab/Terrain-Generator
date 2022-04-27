@@ -2,6 +2,170 @@ import pygame, math
 
 
 # Matricies Multiplication Functions
+import pygame, math, random
+
+
+# Matricies Multiplication Function
+
+def MatriciesMultiply(ma,mb):
+    rowa = len(ma[0])
+    colb = len(ma)
+    mc = [1,1,1]
+
+    i = 0
+    while i < colb:
+        j = 0
+        amount = 0
+        while j < rowa:
+            amount += mb[i] * ma[i][j]
+            j += 1
+        mc[i] = amount
+        i += 1
+
+
+    return mc
+
+
+# Rotation and Projection Matricies
+def RotationZ(rotz):
+    rotationZ = ((math.cos(rotz),-1 * math.sin(rotz),0), (math.sin(rotz),math.cos(rotz), 0), (0,0,1))
+    return rotationZ
+
+def RotationX(rotx):
+    rotationX = ((1,0,0), (0,math.cos(rotx),-1 * math.sin(rotx)), (0,math.sin(rotx),math.cos(rotx)))
+    return rotationX
+
+def RotationY(roty):
+    rotationY = ((math.cos(roty),0,math.sin(roty)), (0,1,0), (-1 * math.sin(roty),0,math.cos(roty)))
+    return rotationY
+
+Projection = ((1,0,0),(0,1,0),(0,0,0))
+
+
+
+
+
+
+#Draw window.
+Length = 800
+WINDOW = pygame.display.set_mode((Length + 10,Length + 10))
+
+
+# Set up the grid. Depth is not yet added.
+
+
+# Manipulate the points in 3D space, before projecting them to the Window.
+
+def ManipulatePoints(x,y,z,rotx,roty,rotz):
+    XYZ = (x,y,z)
+    XYZ = MatriciesMultiply(RotationX(rotx), XYZ)
+    XYZ = MatriciesMultiply(RotationY(roty), XYZ)
+    XYZ = MatriciesMultiply(RotationZ(rotz), XYZ)
+    XYZ = MatriciesMultiply(Projection, XYZ)
+    return XYZ
+
+# Draw the Line from the points that have been manipulated.
+def DrawLine(Point1,Point2):
+    Half = Length / 2
+
+    pygame.draw.line(WINDOW, (255,0,255), (Point1[0] + Half,Point1[1] + Half),(Point2[0] + Half,Point2[1] + Half))
+
+
+# Draws the grid by getting and manipulating points in 3D space, projecting them into 2D space and then joining them with a line.
+
+def DrawGrid(rotx,roty,rotz):
+    pygame.Surface.fill(WINDOW, (0,0,0))
+    scale = 40
+    HalfLength = (Length / scale) / 2
+    x = -1 * HalfLength
+    y = -1 * HalfLength
+    
+    while y < HalfLength:
+        x = -1 * HalfLength
+        while x < HalfLength:
+            # Draw horizontal line
+            Point1 = ManipulatePoints((scale * x), (scale * y), 1,rotx,roty,rotz)
+            Point2 = ManipulatePoints((scale * (x + 1)), (scale * y), 1,rotx,roty,rotz)
+            DrawLine(Point1, Point2)
+
+            # Draw vertical line
+
+            Point1 = ManipulatePoints((scale * x), (scale * y), 1,rotx,roty,rotz)
+            Point2 = ManipulatePoints((scale * x), (scale * (y + 1)), 1,rotx,roty,rotz)
+            DrawLine(Point1, Point2)
+            
+            # Create diagonal line
+
+            Point1 = ManipulatePoints((scale * (x + 1)), (scale * (y + 1)), 1,rotx,roty,rotz)
+            Point2 = ManipulatePoints((scale * x), (scale * y), 1,rotx,roty,rotz)
+            DrawLine(Point1, Point2)
+
+            x += 1
+
+            
+        Point1 = ManipulatePoints((scale * x), (scale * y), 1,rotx,roty,rotz)
+        Point2 = ManipulatePoints((scale * (x + 1)), (scale * y), 1,rotx,roty,rotz)
+        DrawLine(Point1, Point2)
+
+
+        Point1 = ManipulatePoints((scale * x), (scale * y), 1,rotx,roty,rotz)
+        Point2 = ManipulatePoints((scale * x), (scale * (y + 1)), 1,rotx,roty,rotz)
+        DrawLine(Point1, Point2)
+    
+        y += 1
+    
+        
+    
+    
+
+    
+    
+
+    
+
+
+
+    
+    
+
+        
+    
+
+DrawGrid(math.pi/3,0,0)
+
+
+
+
+
+
+# Draw and update window loop
+def main():
+
+    run = True
+    rotation = 0
+    while run:
+
+        
+        pygame.display.flip()   
+        
+        #if rotation != 1:
+        #   rotation += 0.01
+        #DrawGrid(rotation,0,0)
+
+
+        #pygame.time.delay(10)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+    pygame.quit()
+
+
+main()
+
+
+
 
 # Test values
 ma = ((1,0,1),(1,0,1),(1,0,1))import pygame, math
