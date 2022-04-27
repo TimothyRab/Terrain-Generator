@@ -5,6 +5,134 @@ import pygame, math
 
 # Test values
 ma = ((1,0,1),(1,0,1),(1,0,1))import pygame, math
+import pygame, math
+
+
+# Matricies Multiplication Functions
+
+# Test values
+
+# Multiply Matricies Function. Requires [][] even when there is a sole value in a list.
+# Literally walk through the proccess step by step. without music. It's simple, you just have to walk through it yourself
+def MatriciesMultiply(ma,mb):
+    rowa = len(ma[0])
+    colb = len(ma)
+    mc = [1,1,1]
+
+    i = 0
+    while i < colb:
+        j = 0
+        amount = 0
+        while j < rowa:
+            amount += mb[i] * ma[i][j]
+            j += 1
+        mc[i] = amount
+        i += 1
+
+
+    return mc
+
+
+
+def RotationZ(angle):
+    rotationZ = ((math.cos(angle),-1 * math.sin(angle),0), (math.sin(angle),math.cos(angle), 0), (0,0,1))
+    return rotationZ
+
+def RotationX(angle):
+    rotationX = ((1,0,0), (0,math.cos(angle),-1 * math.sin(angle)), (0,math.sin(angle),math.cos(angle)))
+    return rotationX
+
+def RotationY(angle):
+    rotationY = ((math.cos(angle),0,math.sin(angle)), (0,1,0), (-1 * math.sin(angle),0,math.cos(angle)))
+    return rotationY
+
+Projection = ((1,0,0),(0,1,0),(0,0,0))
+
+
+
+
+
+
+#Draw window.
+Length = 800
+WINDOW = pygame.display.set_mode((Length,Length))
+
+
+# Set up the grid. Perspective and 3D is not yet added.
+
+
+rotation = 180
+def draw(rotation):
+    pygame.Surface.fill(WINDOW, (0,0,0))
+    scale = 20
+    x = -1 * (Length / scale)
+    y = -1 * (Length / scale)
+    
+    while y < Length / scale:
+        x = 0
+        while x < Length / scale:
+
+         # Draw horizontal line
+            Point1 = MatriciesMultiply(RotationY(rotation), (scale * x, scale * y,1))
+            Point2 = MatriciesMultiply(RotationY(rotation), (scale * (x + 1), scale * y,1))
+        
+            Point1 = MatriciesMultiply(Projection, Point1)
+            Point2 = MatriciesMultiply(Projection, Point2)
+
+            pygame.draw.line(WINDOW,(255,0,255),(Point1[0] + Length/2,Point1[1] + Length/2),(Point2[0] + Length/2,Point2[1] + Length/2))
+
+            # Draw vertical line
+            Point1 = MatriciesMultiply(RotationY(rotation), (scale * x, scale * y,1))
+            Point2 = MatriciesMultiply(RotationY(rotation), (scale * x, scale * (y + 1),1))
+
+            Point1 = MatriciesMultiply(Projection, Point1)
+            Point2 = MatriciesMultiply(Projection, Point2)
+
+            pygame.draw.line(WINDOW,(255,0,255),(Point1[0] + Length/2,Point1[1] + Length/2),(Point2[0] + Length/2,Point2[1] + Length/2))
+
+
+
+
+
+
+
+            x += 1
+        y += 1
+    
+
+draw(0)
+
+
+
+
+
+
+# Draw and update window loop
+def main():
+
+    run = True
+    rotation = 0
+    while run:
+
+        
+        pygame.display.flip()   
+        #if rotation != 360:
+        #    rotation += 0.1
+        #draw(rotation)
+
+        pygame.time.delay(10)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+    pygame.quit()
+
+
+main()
+
+
+
 
 
 # Matricies Multiplication Functions
