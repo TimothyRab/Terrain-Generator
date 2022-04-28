@@ -4,6 +4,174 @@ import pygame, math
 # Matricies Multiplication Functions
 import pygame, math, random
 
+import pygame, math, random
+from perlin_noise import PerlinNoise
+
+
+noise = PerlinNoise()
+array = [0]
+print(array[0])
+# Matricies Multiplication Function
+
+
+def MatriciesMultiply(ma,mb):
+    rowa = len(ma[0])
+    colb = len(ma)
+    mc = [1,1,1]
+
+    i = 0
+    while i < colb:
+        j = 0
+        amount = 0
+        while j < rowa:
+            amount += mb[i] * ma[i][j]
+            j += 1
+        mc[i] = amount
+        i += 1
+
+    return mc
+
+
+# Rotation and Projection Matricies
+def RotationZ(rotz):
+    rotationZ = ((math.cos(rotz),-1 * math.sin(rotz),0), (math.sin(rotz),math.cos(rotz), 0), (0,0,1))
+    return rotationZ
+
+def RotationX(rotx):
+    rotationX = ((1,0,0), (0,math.cos(rotx),-1 * math.sin(rotx)), (0,math.sin(rotx),math.cos(rotx)))
+    return rotationX
+
+def RotationY(roty):
+    rotationY = ((math.cos(roty),0,math.sin(roty)), (0,1,0), (-1 * math.sin(roty),0,math.cos(roty)))
+    return rotationY
+
+
+distance = 1.7
+
+def Projection(z):
+
+    Projection = ((1 / (distance - z),0,0),(0,1 / (distance - z),0),(0,0,0))
+    return Projection
+
+
+
+
+
+
+#Draw window.
+Length = 800
+Window = pygame.display.set_mode((Length , Length))
+Half = (Length / 2)
+Zoom = 160
+
+# Set up the grid. Depth is not yet added.
+
+
+# Manipulate the points in 3D space, before projecting them to the Window.
+
+def ManipulatePoints(x,y,z,rotx,roty,rotz):
+    XYZ = (x,y + (7 * noise([x/10,(z + array[0]) / 10])),z)
+
+    XYZ = MatriciesMultiply(RotationX(rotx), XYZ)
+    XYZ = MatriciesMultiply(RotationY(roty), XYZ)
+    XYZ = MatriciesMultiply(RotationZ(rotz), XYZ)
+    XYZ = MatriciesMultiply(Projection(XYZ[2]), XYZ)
+    return XYZ
+
+# Draw the Line from the points that have been manipulated.
+
+def DrawLine(Point1,Point2, colour):
+
+    if Point1[0] * Zoom + Half < Length + 100:
+        if Point2[0] * Zoom + Half < Length + 100:
+            if Point1[0] * Zoom + Half > - 80:
+                if Point2[0] * Zoom + Half > - 80:
+                    if Point1[1] * Zoom + Half < Length + 400:
+                        if Point2[1] * Zoom + Half < Length + 400:
+                            pygame.draw.line(Window, (colour,0,colour), (Point1[0] * Zoom + Half,Point1[1] * Zoom + Half),(Point2[0] * Zoom  + Half,Point2[1] * Zoom + Half))
+
+    
+
+
+# Draws the grid by getting and manipulating points in 3D space, projecting them into 2D space and then joining them with a line.
+
+
+scalez = 25
+scalex = 20
+tilesize = 2
+
+def DrawGrid(x,y,z,rotx,roty,rotz):
+    pygame.Surface.fill(Window, (50,0,50))
+
+    colour = 255
+    while z < scalez:
+
+        x = -1 * scalex
+        
+        colour -= 15
+        while x < scalex:
+            
+            
+            # Draw horizontal line
+            Point1 = ManipulatePoints(x, y, z,rotx,roty,rotz)
+            Point2 = ManipulatePoints(x + tilesize, y, z,rotx,roty,rotz)
+            
+            DrawLine(Point1, Point2, colour)
+
+            # Draw vertical line
+
+            Point1 = ManipulatePoints(x, y, z,rotx,roty,rotz)
+            Point2 = ManipulatePoints(x, y , z + tilesize,rotx,roty,rotz)
+            
+            DrawLine(Point1, Point2, colour)
+            
+            # Create diagonal line
+
+            Point1 = ManipulatePoints(x + tilesize, y, z + tilesize,rotx,roty,rotz)
+            Point2 = ManipulatePoints(x, y, z,rotx,roty,rotz)
+            
+            DrawLine(Point1, Point2, colour)
+
+            x += tilesize
+
+
+        # Draw vertical line
+        Point1 = ManipulatePoints(x, y, z,rotx,roty,rotz)
+        Point2 = ManipulatePoints(x, y, z + tilesize,rotx,roty,rotz)
+
+        DrawLine(Point1, Point2, colour)
+    
+        z += tilesize
+
+
+
+# Draw and update window loop
+def main():
+
+    run = True
+    while run:
+        
+        pygame.display.flip()   
+        
+        
+        DrawGrid(0,-5,-1,2.6,0,0)
+        pygame.draw.line(Window,(155,155,155),(0,800),(800,800))
+        pygame.draw.line(Window,(155,155,155),(800,0),(800,800))
+
+        array[0] += 1
+
+        for event in pygame.event.get():
+
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+
+
+
+main()
+
+
+
 
 # Matricies Multiplication Function
 
