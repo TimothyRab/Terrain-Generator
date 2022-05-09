@@ -4,7 +4,6 @@ from perlin_noise import PerlinNoise
 # +++++++++++ TO DO ++++++++++++
 # Smart optimizations for rendering, compute less math, especially math that would otherwise be wasted
 # == Check tile sizes and scale. Possible optimization opportunity?
-# == Rotation and translation optimizations possible, you can precalculate sin and cos which saves compute time
 # Configure AI to use fixed systems, possibly create more modular and independent functions
 
 
@@ -36,11 +35,11 @@ def MatriciesMultiply(ma,mb):
 
 # Rotation and Projection Matricies
 def RotationZ(rotation):
-    rotationZ = ((math.cos(rotation), math.sin(-1 * rotation),0), (math.sin(rotation),math.cos(rotation), 0), (0,0,1))
+    rotationZ = ((math.cos(rotation), -1 * math.sin( rotation),0), (math.sin(rotation),math.cos(rotation), 0), (0,0,1))
     return rotationZ
 
 def RotationX(rotation):
-    rotationX = ((1,0,0), (0,math.cos(rotation),math.sin(-1 * rotation)), (0,math.sin(rotation),math.cos(rotation)))
+    rotationX = ((1,0,0), (0,math.cos(rotation),-1 * math.sin(rotation)), (0,math.sin(rotation),math.cos(rotation)))
     return rotationX
 
 def RotationY(rotation):
@@ -52,15 +51,13 @@ def Projection(point):
     Projection = ((1 / (distance - point[2]),0,0),(0,1 / (distance - point[2]),0),(0,0,0))
     return Projection
 
-def XYRotation(array,angle):
-    sin = math.sin(angle)
-    cos = math.cos(angle)
 
-    x = array[0] * cos - array[1] * sin
-    y = array[1] * cos + array[0] * sin
-
-    return (x,y)
-
+def PreCalcRot(rotation):
+    rotlist = []
+    rotlist.append(RotationX(rotation[0]))
+    rotlist.append(RotationY(rotation[1]))
+    rotlist.append(RotationZ(rotation[2]))
+    return rotlist
 
 #Draw window.
 Length = 800
@@ -72,9 +69,10 @@ FOV = 100
 
 def ManipulatePoints(point,rotation,translation):
 
-    point = MatriciesMultiply(RotationX(rotation[0]), point)
-    point = MatriciesMultiply(RotationY(rotation[1]), point)
-    point = MatriciesMultiply(RotationZ(rotation[2]), point)
+
+    point = MatriciesMultiply(rotation[0], point)
+    point = MatriciesMultiply(rotation[1], point)
+    point = MatriciesMultiply(rotation[2], point)
 
     point[0] += translation[0]
     point[1] += translation[1]
@@ -97,36 +95,20 @@ def DrawLine(Point1,Point2, colour):
 
 # Function for the points of the ship, joining and drawing the ship and representing it on the screen.
 
-def Ship(x,y,z,rotx,roty,rotz,colour):
-    Coord1 = ((-0.25,0,0.5,0,0,0),(0.25,0,0.5,0,0,0),(-0.25,0,-0.5,0,0,0),(0.25,0,-0.5,0,0,0),
-              (-0.25,0.1,0.5,0,0,0),(0.25,0.1,0.5,0,0,0),(-0.25,0.1,-0.5,0,0,0),(0.25,0.1,-0.5,0,0,0),
-              (-0.5,0.05,-0.5,0,0,0),(0.5,0.05,-0.5,0,0,0),(-0.25,0.05,0,0,0,0),(0.25,0.05,0,0,0,0),
-               (-0.1,0,1,0,0,0), (0.1,0,1,0,0,0))
+def Ship(translation,rotation,colour):
+
+    Coord1 = ((-0.25,0,0.5),(0.25,0,0.5),(-0.25,0,-0.5),(0.25,0,-0.5),
+              (-0.25,0.1,0.5),(0.25,0.1,0.5),(-0.25,0.1,-0.5),(0.25,0.1,-0.5),
+              (-0.5,0.05,-0.5),(0.5,0.05,-0.5),(-0.25,0.05,0),(0.25,0.05,0),
+               (-0.1,0,1), (0.1,0,1))
+    
     Coord2 = []
     i = 0
     while i < len(Coord1):
-
-        Coord2.append(ManipulatePoints((Coord1[i][0],Coord1[i][1],Coord1[i][2]),(Coord1[i][3] + rotx,Coord1[i][4] + roty,Coord1[i][5] + rotz),(x,y,z)))
+        
+        Coord2.append(ManipulatePoints(Coord1[i],PreCalcRot(rotation),translation))
         i += 1
 
-    #Hitbox
-    XYHitbox = [800,800,0,0]
-    i = 0
-    while i < len(Coord2):
-        
-        if Coord2[i][0] < XYHitbox[0]:
-            XYHitbox[0] = Coord2[i][0]
-        if Coord2[i][1] < XYHitbox[1]:
-            XYHitbox[1] = Coord2[i][1]
-        if Coord2[i][0] > XYHitbox[2]:
-            XYHitbox[2] = Coord2[i][0]
-        if Coord2[i][1] > XYHitbox[3]:
-            XYHitbox[3] = Coord2[i][1]
-        i += 1
-
-
-        # Base
-        
     DrawLine(Coord2[1], Coord2[3], colour)
     DrawLine(Coord2[0], Coord2[1], colour)
     DrawLine(Coord2[2], Coord2[0], colour)
@@ -161,7 +143,7 @@ def Ship(x,y,z,rotx,roty,rotz,colour):
     DrawLine(Coord2[5],Coord2[13],colour)
     DrawLine(Coord2[12],Coord2[13],colour)
     
-    return XYHitbox
+   # return XYHitbox
 
 
 # Parameters for the scale of the grid and amount of squares on both axis
@@ -177,6 +159,7 @@ def DrawGrid(translation,rotation):
     y = translation[1]
     z = 0
     Coordinates = []
+    rotation = PreCalcRot(rotation)
     while z < scalez:
 
         x = -1 * scalex
@@ -190,7 +173,7 @@ def DrawGrid(translation,rotation):
             Coordinates.append(ManipulatePoints((x, 0, z),rotation,translation))
             
             translation[1] = y + 7 * noise([xcornerplus/10,z / 10])
-            Coordinates.append(ManipulatePoints((x + tilesize, 0, z),rotation,translation))
+            Coordinates.append(ManipulatePoints((xcornerplus, 0, z),rotation,translation))
 
             translation[1] = y + 7 * noise([x/10,zcornerplus / 10])
             Coordinates.append(ManipulatePoints((x, 0, zcornerplus),rotation,translation))
@@ -203,61 +186,29 @@ def DrawGrid(translation,rotation):
     while i != len(Coordinates):
         DrawLine(Coordinates[i],Coordinates[i + 1],(255,0,255))
         DrawLine(Coordinates[i],Coordinates[i + 2],(255,0,255))
-        if i < 540:
+        if i < len(Coordinates) - (scalex * 3):
+            #540
             DrawLine(Coordinates[i],Coordinates[i + (scalex * 3) + 1],(255,0,255))
         i += 3
 
 
 # Draw a rotating reticle on the screen
 
-
-
 def Reticle(Mouse,angle):
 
     angle = angle / 10
 
     Coord1 = ((0,0.05,0),(0,0.2,0),(0.05, 0.2,0))
-    Rotation = (0,0,0)
-    Translation = ((Mouse[0] / Length - 0.5) * 6,(Mouse[1] / Length - 0.5) * 6,0)
+    Translation = ((Mouse[0] / Length - 0.5) * 7,(Mouse[1] / Length - 0.5) * 7,0)
     i = 0
     while i < 4:
-        Rotation = (0,0,i * math.pi / 2 + angle)
-        DrawLine(ManipulatePoints(Coord1[0], Rotation, Translation), ManipulatePoints(Coord1[1], Rotation, Translation), (255,255,0))
-        DrawLine(ManipulatePoints(Coord1[0], Rotation, Translation), ManipulatePoints(Coord1[2], Rotation, Translation), (255,255,0))
-        DrawLine(ManipulatePoints(Coord1[1], Rotation, Translation), ManipulatePoints(Coord1[2], Rotation, Translation), (255,255,0))
+        Rotation = PreCalcRot((0,0,i * math.pi / 2 + angle))
+        DrawLine(ManipulatePoints(Coord1[0], Rotation, Translation), ManipulatePoints(Coord1[1], Rotation, Translation), (0,170,255))
+        DrawLine(ManipulatePoints(Coord1[0], Rotation, Translation), ManipulatePoints(Coord1[2], Rotation, Translation), (0,170,255))
+        DrawLine(ManipulatePoints(Coord1[1], Rotation, Translation), ManipulatePoints(Coord1[2], Rotation, Translation), (0,170,255))
         i += 1
-
-
-
-class EnemyShip():
-
-
-    def __init__(self,initx,inity,initz):
-        #self.x = (random.random() * 5) - 2
-        self.x = 0
-        self.y = inity
-        self.z = initz
-        self.endpoint = (random.randrange(-4,4),random.randrange(-2,2),10)
-        self.pathing = [random.randint(0, 1),random.randint(0, 1)]
-        self.HP = 2
-        self.rotation = 0
-
-      
-
-    def update(self, Mouse):
-   
-        #if self.z < self.endpoint[2]:
-           # self.x += self.endpoint[0] / 10
-           # self.y += self.endpoint[1] / 10
-           # self.z += self.endpoint[2] / 10
-
-        if self.HP != 0:
-            self.rotation += 0.1
-            Hitbox = Ship(self.x,self.y,self.z,self.rotation,0,0,(255,0,0))
-           # if Mouse[0] + 5 > Hitbox[0] and Mouse[0] - 5 < Hitbox[2] and Mouse[1] + 5 > Hitbox[1] and Mouse[1] - 5 < Hitbox[3]:
-                #self.HP -= 1
-
         
+# Class for Playership
 class PlayerShip():
 
 
@@ -271,14 +222,9 @@ class PlayerShip():
 
     def update(self, Mouse):
         self.t += 0.01
-        Hitbox = Ship((Mouse[0] - (Length/2)) / 400,(Mouse[1] - (Length/2)) / 400,2,0,0,self.t,(0,170,255))
-        
+        Ship(((Mouse[0] - (Length/2)) / 400,(Mouse[1] - (Length/2)) / 400,2),(0,0,math.pi),(0,170,255))
 
 
-
-
-
-#enemy = EnemyShip(0, 0, 0)
 player = PlayerShip(0, 0, 0)
 
 # Draw and update window loop
@@ -298,10 +244,8 @@ def main():
 
         #Terrain
         DrawGrid([0,3,0],(2.6,0,0))
-         
-        # Enemy Ships
+
         Reticle(Mouse,timer)
-        #enemy.update(Mouse)
         player.update(Mouse)
 
         pygame.display.flip()  
