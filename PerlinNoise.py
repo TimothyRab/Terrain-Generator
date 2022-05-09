@@ -3,11 +3,8 @@ from perlin_noise import PerlinNoise
 
 # +++++++++++ TO DO ++++++++++++
 # Smart optimizations for rendering, compute less math, especially math that would otherwise be wasted
-# == There is a possible optimization method available for the mesh rendering. There are multiple points re-created which requires more computation and list/array space
 # == Check tile sizes and scale. Possible optimization opportunity?
-# == Rotation and translation optimizations possible, you can precalculate sin and cos which saves compute time.
-# Configure the aim reticle to use the same 3D rotation as the other models. Special effects could be added!!!
-# == Also possible to optimize the reticle. Figure it out!!
+# == Rotation and translation optimizations possible, you can precalculate sin and cos which saves compute time
 # Configure AI to use fixed systems, possibly create more modular and independent functions
 
 
@@ -189,56 +186,47 @@ def DrawGrid(translation,rotation):
             zcornerplus = z + tilesize
             xcornerplus = x + tilesize
 
-            translation[1] = y + noise([x/10,z / 10])
+            translation[1] = y + 7 * noise([x/10,z / 10])
             Coordinates.append(ManipulatePoints((x, 0, z),rotation,translation))
             
-            translation[1] = y + noise([xcornerplus/10,z / 10])
+            translation[1] = y + 7 * noise([xcornerplus/10,z / 10])
             Coordinates.append(ManipulatePoints((x + tilesize, 0, z),rotation,translation))
 
-            translation[1] = y + noise([x/10,zcornerplus / 10])
+            translation[1] = y + 7 * noise([x/10,zcornerplus / 10])
             Coordinates.append(ManipulatePoints((x, 0, zcornerplus),rotation,translation))
-
-            # this doesn't nessecarily need to be here
-            translation[1] = y + noise([xcornerplus/10,zcornerplus / 10])
-            Coordinates.append(ManipulatePoints((xcornerplus, 0, zcornerplus),rotation,translation))
-
-            # Draw horizontal line
 
             x += tilesize
     
         z += tilesize
     
     i = 0
-    
-    while i < len(Coordinates):
+    while i != len(Coordinates):
         DrawLine(Coordinates[i],Coordinates[i + 1],(255,0,255))
         DrawLine(Coordinates[i],Coordinates[i + 2],(255,0,255))
-        DrawLine(Coordinates[i],Coordinates[i + 3],(255,0,255))
-        i += 4
+        if i < 540:
+            DrawLine(Coordinates[i],Coordinates[i + (scalex * 3) + 1],(255,0,255))
+        i += 3
+
 
 # Draw a rotating reticle on the screen
+
+
 
 def Reticle(Mouse,angle):
 
     angle = angle / 10
 
-    x = Mouse[0]
-    y = Mouse[1]
+    Coord1 = ((0,0.05,0),(0,0.2,0),(0.05, 0.2,0))
+    Rotation = (0,0,0)
+    Translation = ((Mouse[0] / Length - 0.5) * 6,(Mouse[1] / Length - 0.5) * 6,0)
     i = 0
     while i < 4:
-        Line1 = XYRotation((0, -5),angle + ((math.pi / 2) * i))
-        Line2 = XYRotation((0,-20), angle + ((math.pi / 2) * i))
-        DrawLine((Line1[0] + x,Line1[1] + y),(Line2[0] + x,Line2[1] + y), (0,170,255))
-
-        Line1 = XYRotation((0, -5),angle + ((math.pi / 2) * i))
-        Line2 = XYRotation((+5,-20),angle + ((math.pi / 2) * i))
-        DrawLine((Line1[0] + x,Line1[1] + y),(Line2[0] + x,Line2[1] + y), (0,170,255))
-
-        Line1 = XYRotation((0, -20),angle + ((math.pi / 2) * i))
-        Line2 = XYRotation((+5,-20), angle + ((math.pi / 2) * i))
-        DrawLine((Line1[0] + x,Line1[1] + y),(Line2[0] + x,Line2[1] + y), (0,170,255))
-        
+        Rotation = (0,0,i * math.pi / 2 + angle)
+        DrawLine(ManipulatePoints(Coord1[0], Rotation, Translation), ManipulatePoints(Coord1[1], Rotation, Translation), (255,255,0))
+        DrawLine(ManipulatePoints(Coord1[0], Rotation, Translation), ManipulatePoints(Coord1[2], Rotation, Translation), (255,255,0))
+        DrawLine(ManipulatePoints(Coord1[1], Rotation, Translation), ManipulatePoints(Coord1[2], Rotation, Translation), (255,255,0))
         i += 1
+
 
 
 class EnemyShip():
