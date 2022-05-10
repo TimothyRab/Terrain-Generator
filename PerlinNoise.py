@@ -1,13 +1,10 @@
-import pygame, math, random
+import pygame, math, random, time
 from perlin_noise import PerlinNoise
 
 # +++++++++++ TO DO ++++++++++++
 # Smart optimizations for rendering, compute less math, especially math that would otherwise be wasted
 # == Check tile sizes and scale. Possible optimization opportunity?
 # Configure AI to use fixed systems, possibly create more modular and independent functions
-
-
-
 
 
 noise = PerlinNoise()
@@ -97,58 +94,57 @@ def DrawLine(Point1,Point2, colour):
 
 def Ship(translation,rotation,colour):
 
-    Coord1 = ((-0.25,0,0.5),(0.25,0,0.5),(-0.25,0,-0.5),(0.25,0,-0.5),
+    Coord1 = [(-0.25,0,0.5),(0.25,0,0.5),(-0.25,0,-0.5),(0.25,0,-0.5),
               (-0.25,0.1,0.5),(0.25,0.1,0.5),(-0.25,0.1,-0.5),(0.25,0.1,-0.5),
               (-0.5,0.05,-0.5),(0.5,0.05,-0.5),(-0.25,0.05,0),(0.25,0.05,0),
-               (-0.1,0,1), (0.1,0,1))
+               (-0.1,0,1), (0.1,0,1)]
+
     
-    Coord2 = []
     i = 0
     while i < len(Coord1):
         
-        Coord2.append(ManipulatePoints(Coord1[i],PreCalcRot(rotation),translation))
+        Coord1[i] = (ManipulatePoints(Coord1[i],PreCalcRot(rotation),translation))
         i += 1
 
-    DrawLine(Coord2[1], Coord2[3], colour)
-    DrawLine(Coord2[0], Coord2[1], colour)
-    DrawLine(Coord2[2], Coord2[0], colour)
-    DrawLine(Coord2[2], Coord2[3], colour)
+    DrawLine(Coord1[1], Coord1[3], colour)
+    DrawLine(Coord1[0], Coord1[1], colour)
+    DrawLine(Coord1[2], Coord1[0], colour)
+    DrawLine(Coord1[2], Coord1[3], colour)
     
-        # Top
-    DrawLine(Coord2[5], Coord2[7], colour)
-    DrawLine(Coord2[7], Coord2[6], colour)
-    DrawLine(Coord2[4], Coord2[5], colour)
-    DrawLine(Coord2[6], Coord2[4], colour)
+    # Top
+    DrawLine(Coord1[5], Coord1[7], colour)
+    DrawLine(Coord1[7], Coord1[6], colour)
+    DrawLine(Coord1[4], Coord1[5], colour)
+    DrawLine(Coord1[6], Coord1[4], colour)
 
-        # Corner
-    DrawLine(Coord2[3], Coord2[7], colour)
-    DrawLine(Coord2[2], Coord2[6], colour)
-    DrawLine(Coord2[1], Coord2[5], colour)
-    DrawLine(Coord2[0], Coord2[4], colour)
+    # Corner
+    DrawLine(Coord1[3], Coord1[7], colour)
+    DrawLine(Coord1[2], Coord1[6], colour)
+    DrawLine(Coord1[1], Coord1[5], colour)
+    DrawLine(Coord1[0], Coord1[4], colour)
 
-        # Wing
-    DrawLine(Coord2[3],Coord2[9],colour)
-    DrawLine(Coord2[7],Coord2[9],colour)
+    # Wing
+    DrawLine(Coord1[3],Coord1[9],colour)
+    DrawLine(Coord1[7],Coord1[9],colour)
 
-    DrawLine(Coord2[6],Coord2[8],colour)
-    DrawLine(Coord2[2],Coord2[8],colour)
+    DrawLine(Coord1[6],Coord1[8],colour)
+    DrawLine(Coord1[2],Coord1[8],colour)
 
-    DrawLine(Coord2[8],Coord2[10],colour)
-    DrawLine(Coord2[9],Coord2[11],colour)
+    DrawLine(Coord1[8],Coord1[10],colour)
+    DrawLine(Coord1[9],Coord1[11],colour)
 
-        # Cockpit
-    DrawLine(Coord2[0],Coord2[12],colour)
-    DrawLine(Coord2[1],Coord2[13],colour)
-    DrawLine(Coord2[4],Coord2[12],colour)
-    DrawLine(Coord2[5],Coord2[13],colour)
-    DrawLine(Coord2[12],Coord2[13],colour)
-    
-   # return XYHitbox
+    # Cockpit
+    DrawLine(Coord1[0],Coord1[12],colour)
+    DrawLine(Coord1[1],Coord1[13],colour)
+    DrawLine(Coord1[4],Coord1[12],colour)
+    DrawLine(Coord1[5],Coord1[13],colour)
+    DrawLine(Coord1[12],Coord1[13],colour)
+
 
 
 # Parameters for the scale of the grid and amount of squares on both axis
 
-scalez = 20
+scalez = 15
 scalex = 20
 tilesize = 2
 
@@ -171,12 +167,6 @@ def DrawGrid(translation,rotation):
 
             translation[1] = y + 7 * noise([x/10,z / 10])
             Coordinates.append(ManipulatePoints((x, 0, z),rotation,translation))
-            
-            translation[1] = y + 7 * noise([xcornerplus/10,z / 10])
-            Coordinates.append(ManipulatePoints((xcornerplus, 0, z),rotation,translation))
-
-            translation[1] = y + 7 * noise([x/10,zcornerplus / 10])
-            Coordinates.append(ManipulatePoints((x, 0, zcornerplus),rotation,translation))
 
             x += tilesize
     
@@ -184,12 +174,20 @@ def DrawGrid(translation,rotation):
     
     i = 0
     while i != len(Coordinates):
-        DrawLine(Coordinates[i],Coordinates[i + 1],(255,0,255))
-        DrawLine(Coordinates[i],Coordinates[i + 2],(255,0,255))
-        if i < len(Coordinates) - (scalex * 3):
-            #540
-            DrawLine(Coordinates[i],Coordinates[i + (scalex * 3) + 1],(255,0,255))
-        i += 3
+
+        #print(i)
+        if i  + 1< len(Coordinates) and i + 1 != scalex * round(i / scalex):
+            
+            DrawLine(Coordinates[i],Coordinates[i + 1],(255,0,0))
+
+        if i + scalex < len(Coordinates):
+            DrawLine(Coordinates[i],Coordinates[i + scalex],(0,255,0))
+
+        if i + scalex + 1 < len(Coordinates) and i + 1 != scalex * round(i / scalex):
+         DrawLine(Coordinates[i],Coordinates[i + scalex + 1],(0,0,255))
+        
+        i += 1
+        
 
 
 # Draw a rotating reticle on the screen
@@ -227,14 +225,20 @@ class PlayerShip():
 
 player = PlayerShip(0, 0, 0)
 
+
+
 # Draw and update window loop
 def main():
-
+    last_time = time.time()
     run = True
     timer = -10
     pygame.mouse.set_visible(False)
 
     while run:
+        
+        dt = time.time() - last_time
+        last_time = time.time()
+        print(dt * 60)
         pygame.Surface.fill(Window,(50,0,50))
 
         Mouse = pygame.mouse.get_pos()
